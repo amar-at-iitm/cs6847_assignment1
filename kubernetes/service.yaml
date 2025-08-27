@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+spec:
+  selector:
+    app: flask-service
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 5000       # service port
+      targetPort: 5000 # container port
+      nodePort: 30007  # external port (fixed for Minikube access)
