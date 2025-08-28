@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: flask-container
-        image: flask-app:latest  # use same image you built
+        image: flask-app:latest           # use same image you built
+        imagePullPolicy: IfNotPresent   
         ports:
         - containerPort: 5000
         resources:
@@ -24,3 +25,5 @@ spec:
           limits:
             cpu: "500m"
             memory: "256Mi"
+
+
