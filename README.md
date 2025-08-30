@@ -1,4 +1,6 @@
 # cs6847 Assignment 1 – Docker Swarm & Kubernetes Deployment with Client Testing
+## Project Overview
+This project demonstrates deploying a simple Flask web service using both Docker Swarm and Kubernetes, with a Python client for load testing. It is structured for reproducible experiments and benchmarking.
 
 ## Requirements
 - Docker & Docker Swarm
@@ -13,6 +15,10 @@
 assignment1/
 
 │── .dockerignore              # Ignore unnecessary files
+│── .gitignore                  
+│── run_swarm_test.sh 
+│── run_k8s_test.sh
+│── run_all_tests.sh
 │── README.md                 
 │
 ├── app/                      # Application code (the web service)
@@ -21,8 +27,6 @@ assignment1/
 │   ├── Dockerfile             # Dockerfile for the service
 │   └── __init__.py            # (empty, just keeps it tidy as a package)
 │
-├── swarm/                    # Docker Swarm deployment files
-│   └── swarm-deploy.sh        # Script to deploy service with 3 replicas
 │
 ├── kubernetes/               # Kubernetes deployment files
 │   ├── deployment.yaml        # Deployment with min 3 replicas
@@ -41,6 +45,12 @@ assignment1/
 
 ```
 
+## Architecture & Components
+- **app/**: Flask web service (`app.py`), containerized via `Dockerfile`.
+- **client/**: Load-testing client (`client.py`) and helpers (`utils.py`).
+- **kubernetes/**: Kubernetes manifests for deployment, service, and autoscaling (3–10 replicas).
+- **results/**: Stores output from client runs.
+
 
 ### clone repo
 ```bash
@@ -48,110 +58,79 @@ git clone https://github.com/amar-at-iitm/cs6847_assignment1
 cd cs6847_assignment1
 ```
 
-### Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+## Key Workflows
+- **Build & Test Locally**:
+  - Install Python dependencies: 
+  ```bash
+  pip install -r app/requirements.txt
+  ```
+  - Run Flask app locally: 
+  ```bash
+  python app/app.py
+  ```
 
-### Start Minikube
-```bash 
-minikube start
-```
-
-### Setup Minikube’s local Docker environment
-Build the image inside Minikube’s Docker daemon so your cluster can use it directly
-```bash
-eval $(minikube docker-env)
-```
-
-### Build Docker Image
-
-```bash
-cd app
-docker build -t flask-app:latest .
-```
-
-**Check the image exists**
-```bash
-docker images | grep flask-app
-```
-
-### Initialize Docker Swarm
-```bash
-docker swarm init
-```
-
-### Run with Docker Swarm ( 3 Replicas)
-```bash
-docker service create --name flask-swarm --replicas 3 -p 5000:5000 flask-service:latest
-```
-**Check Service**
-```bash
-docker service ls
-```
+- **Docker Swarm**:
+  - Build image: 
+  ```bash
+  docker build -t flask-app:latest app/
+  ```
+  - Init Swarm: 
+  ```bash
+  docker swarm init
+  ```
+  - Deploy: 
+  ```bash
+  docker service create --name flask-swarm --replicas 3 -p 5000:5000 flask-app:latest
+  ```
 
 
-### Run with Kubernetes ( autoscaling 3-10 replicas )
-**Deploy**
-```bash
-kubectl apply -f kubernetes/deployment.yaml
-kubectl apply -f kubernetes/service.yaml
-kubectl apply -f kubernetes/hpa.yaml
-```
-**check status**
-```bash
-kubectl get pods
-kubectl get svc
-kubectl get hpa
-```
-### Run Client Test
-Run the client to test Docker Swarm or Kubernetes services:
-```bash
-cd client
-python client.py --target http://<IP>:<PORT> --rate 10 --output ../results/docker_response_10
-python client.py --target http://<IP>:<PORT> --rate 10000 --output ../results/docker_response_10000
-```
-**Similarly for Kubernetes:**
-```bash
-python client.py --target http://<IP>:<PORT> --rate 10 --output ../results/kubernetes_response_10
-python client.py --target http://<IP>:<PORT> --rate 10000 --output ../results/kubernetes_response_10000
-```
+- **Kubernetes (Minikube)**:
+  - Start: 
+  ```bash
+  minikube start
+  ```
+  - Use Minikube Docker: 
+  ```bash
+  eval $(minikube docker-env)
+  ```
+  - Build image: 
+  ```bash
+  docker build -t flask-app:latest app/
+  ```
+  - Deploy: 
+  ```bash
+  kubectl apply -f kubernetes/
+  ```
+  - Get service URL: 
+  ```bash
+  minikube service flask-service --url
+  ```
+- **Client Testing**:
+  - Example: 
+    ```bash
+    cd client
+    ```
+
+    ```bash
+    python client.py --target http://<IP>:<PORT> --rate 10 --output ../results/docker_response_10
+    python client.py --target http://<IP>:<PORT> --rate 10000 --output ../results/docker_response_10000
+    ```
+
+    ```bash
+    python client.py --target http://<IP>:<PORT> --rate 10 --output ../results/kubernetes_response_10
+    python client.py --target http://<IP>:<PORT> --rate 10000 --output ../results/kubernetes_response_10000
+    ```
 
 
-### Output
+  - Adjust `--rate` and `--output` as needed for experiments.
 
-- results/docker_response_10
+## Conventions & Patterns
+- All service endpoints are exposed on `/` (root) and listen on port 5000 (Docker) or as mapped by Kubernetes.
+- Results are always written to the `results/` directory with descriptive filenames.
+- Kubernetes uses autoscaling (see `hpa.yaml`), Swarm uses fixed replicas.
+- No authentication or persistent storage is used; the service is stateless.
 
-- results/docker_response_10000
-
-- results/kubernetes_response_10
-
-- results/kubernetes_response_10000
-
-
-### Look at services 
-```bash
-minikube service flask-service --url
-```
-
-
-
-
-### For client.py, Examples
-**Test Docker Swarm (10 req/s):**
-```bash 
-python client.py --target http://<SWARM_IP>:5000 --rate 10 --output ../results/docker_response_10
-```
-**Test Docker Swarm (10,000 req/s):**
-```bash
-python client.py --target http://<SWARM_IP>:5000 --rate 10000 --output ../results/docker_response_10000
-```
-**Test Kubernetes (10 req/s):**
-```bash
-python client.py --target http://<K8S_IP>:30007 --rate 10 --output ../results/kubernetes_response_10
-```
-**Test Kubernetes (10,000 req/s):**
-```bash
-python client.py --target http://<K8S_IP>:30007 --rate 10000 --output ../results/kubernetes_response_10000
-```
-- Run it for a shorter duration with `--duration 2`(default is 5 sec).
+## Integration Points
+- The client is decoupled and can target any HTTP endpoint.
+- Docker and Kubernetes deployments are independent; do not run both simultaneously on the same port.
+- All configuration is via YAML (Kubernetes) or CLI (Swarm).
