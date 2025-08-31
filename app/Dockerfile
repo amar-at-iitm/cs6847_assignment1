@@ -16,7 +16,3 @@ EXPOSE 5000
 
 # Run app
 CMD ["python", "app.py"]
-
-# Health check
-HEALTHCHECK CMD curl --fail http://localhost:5000/health || exit 1
-
