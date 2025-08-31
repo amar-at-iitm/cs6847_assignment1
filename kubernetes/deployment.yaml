@@ -2,28 +2,49 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: flask-deployment
+  labels:
+    app: flask-app
 spec:
-  replicas: 3
+  replicas: 3   # min replicas
   selector:
     matchLabels:
-      app: flask-service
+      app: flask-app
   template:
     metadata:
       labels:
-        app: flask-service
+        app: flask-app
     spec:
       containers:
       - name: flask-container
-        image: flask-app:latest           # use same image you built
-        imagePullPolicy: IfNotPresent   
+        image: flask-app:latest
         ports:
         - containerPort: 5000
-        resources:
+        resources:   # Good for autoscaling decisions
           requests:
             cpu: "100m"
             memory: "128Mi"
           limits:
             cpu: "500m"
             memory: "256Mi"
-
-
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+spec:
+  selector:
+    app: flask-app
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: NodePort
