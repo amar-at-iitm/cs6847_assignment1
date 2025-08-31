@@ -1,73 +1,89 @@
 import argparse
-import time
 import asyncio
-import aiohttp
+import time
 import requests
-from utils import log_results, record_time
+import aiohttp
+
+from utils import log_results, timestamp
 
 
-@record_time
-def sync_request(target):
-    """Send one synchronous request and return response."""
-    r = requests.get(target)
-    r.raise_for_status()
-    return r
-
-
-def run_sync(target, rate, output_file, duration=5):
-    """Send requests synchronously at given rate (requests per second)."""
-    interval = 1.0 / rate
+def run_sync(target, rate, output_file, duration):
+    """Synchronous client for low request rates (e.g. 10/s)."""
     times = []
+    errors = 0
+    interval = 1.0 / rate
+    total_requests = int(rate * duration)
 
     print(f"[SYNC] Sending {rate} requests/sec for {duration} seconds...")
-    start_time = time.time()
-    while time.time() - start_time < duration:
+
+    for i in range(total_requests):
+        start = time.perf_counter()
         try:
-            _, elapsed = sync_request(target)
+            r = requests.get(target, timeout=2)
+            r.raise_for_status()
+            elapsed = time.perf_counter() - start
             times.append(elapsed)
-        except Exception as e:
-            print(f"Request failed: {e}")
-        sleep_time = interval - (time.time() - start_time) % interval
-        if sleep_time > 0:
-            time.sleep(sleep_time)
+        except Exception:
+            errors += 1
 
-    log_results(times, output_file)
+        # Print simple progress each second
+        if (i + 1) % rate == 0:
+            print(f"[{(i + 1)//rate}s] sent={i+1} ok={len(times)} failed={errors}")
 
+        time.sleep(interval)
 
-async def fetch(session, target, times):
-    """Helper: send one async request and record time."""
-    t0 = time.time()
-    try:
-        async with session.get(target) as resp:
-            await resp.text()
-    except Exception as e:
-        print(f"Request failed: {e}")
-    t1 = time.time()
-    times.append(t1 - t0)
+    log_results(times, output_file, errors)
+    print(f"[DONE] Finished at {timestamp()}")
 
 
-async def run_async(target, rate, output_file, duration=5):
-    """Send requests asynchronously at high rate."""
+async def run_async(target, rate, output_file, duration):
+    """Asynchronous client for high request rates (e.g. 10,000/s)."""
     times = []
-    total_requests = rate * duration
-    print(f"[ASYNC] Sending ~{total_requests} requests at {rate}/sec...")
+    errors = 0
+    total_requests = int(rate * duration)
+
+    print(f"[ASYNC] Sending {rate} requests/sec for {duration} seconds...")
+
+    async def fetch(session, idx):
+        nonlocal errors
+        start = time.perf_counter()
+        try:
+            async with session.get(target, timeout=2) as resp:
+                if resp.status != 200:
+                    errors += 1
+                    return
+                elapsed = time.perf_counter() - start
+                times.append(elapsed)
+        except Exception:
+            errors += 1
+
+        if (idx + 1) % rate == 0:
+            print(f"[{(idx + 1)//rate}s] sent={idx+1} ok={len(times)} failed={errors}")
 
     async with aiohttp.ClientSession() as session:
-        tasks = [fetch(session, target, times) for _ in range(total_requests)]
+        tasks = []
+        for i in range(total_requests):
+            tasks.append(fetch(session, i))
+            # throttle launch speed
+            await asyncio.sleep(1.0 / rate)
+
         await asyncio.gather(*tasks)
 
-    log_results(times, output_file)
+    log_results(times, output_file, errors)
+    print(f"[DONE] Finished at {timestamp()}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--target", required=True, help="Target URL (http://IP:PORT)")
-    parser.add_argument("--rate", type=int, required=True, help="Requests per second")
-    parser.add_argument("--output", required=True, help="Output filename")
-    parser.add_argument("--duration", type=int, default=5, help="Test duration in seconds")
+    parser = argparse.ArgumentParser(description="Benchmark client for Docker/Kubernetes service.")
+    parser.add_argument("--target", type=str, required=True, help="Target URL (e.g. http://127.0.0.1:5000)")
+    parser.add_argument("--rate", type=int, required=True, help="Requests per second (e.g. 10 or 10000)")
+    parser.add_argument("--duration", type=int, default=5, help="Duration of test in seconds")
+    parser.add_argument("--output", type=str, required=True, help="Output file path (e.g. results/docker_response_10)")
+    parser.add_argument("--mode", type=str, choices=["sync", "async"], default="sync", help="Client mode: sync (low rate) or async (high rate)")
+
     args = parser.parse_args()
 
-    if args.rate <= 100:
+    if args.mode == "sync":
         run_sync(args.target, args.rate, args.output, args.duration)
     else:
         asyncio.run(run_async(args.target, args.rate, args.output, args.duration))
