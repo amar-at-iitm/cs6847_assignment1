@@ -5,7 +5,7 @@ set -euo pipefail
 
 APP_NAME="flask-app"
 SERVICE_NAME="flask-service"
-RESULTS_DIR="Results"
+RESULTS_DIR="results"
 DURATION_SHORT=5
 DURATION_LONG=2
 RATE_LOW=10
