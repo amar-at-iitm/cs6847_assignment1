@@ -4,7 +4,7 @@ import time
 import requests
 import aiohttp
 
-from utils import log_results, timestamp
+from utils import log_results, timestamp, upload_file
 
 
 def run_sync(target, rate, output_file, duration):
@@ -80,10 +80,16 @@ if __name__ == "__main__":
     parser.add_argument("--duration", type=int, default=5, help="Duration of test in seconds")
     parser.add_argument("--output", type=str, required=True, help="Output file path (e.g. results/docker_response_10)")
     parser.add_argument("--mode", type=str, choices=["sync", "async"], default="sync", help="Client mode: sync (low rate) or async (high rate)")
+    parser.add_argument("--upload-url", type=str, help="URL to upload results (e.g. http://127.0.0.1:5000/upload)")
 
     args = parser.parse_args()
+
 
     if args.mode == "sync":
         run_sync(args.target, args.rate, args.output, args.duration)
     else:
         asyncio.run(run_async(args.target, args.rate, args.output, args.duration))
+    
+
+    if args.upload_url:
+        upload_file(args.output, args.upload_url)
