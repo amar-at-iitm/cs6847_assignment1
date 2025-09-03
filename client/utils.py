@@ -1,6 +1,7 @@
 import os
 import statistics
 import time
+import requests
 
 def log_results(times, output_file, errors=0):
     """
@@ -32,3 +33,16 @@ def log_results(times, output_file, errors=0):
 def timestamp():
     """Return current timestamp string for debugging/logging."""
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+def upload_file(file_path, upload_url):
+    """Uploads a file to the provided server."""
+    try:
+        with open(file_path, 'rb') as f:
+            response = requests.post(upload_url, data=f)
+        if response.status_code == 200:
+            print(f"[+] Successfully uploaded {file_path} to {upload_url}")
+        else:
+            print(f"[!] Upload failed with status {response.status_code}")
+    except Exception as e:
+        print(f"[!] Upload error: {e}")
+
