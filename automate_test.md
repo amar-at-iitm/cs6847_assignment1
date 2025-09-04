@@ -78,6 +78,21 @@ This script does the following:
 
 ## Usage
 
+### Adjustments if needed
+- change any required data in the following 
+```
+APP_NAME="flask-app"
+SERVICE_NAME="flask-service"
+RESULTS_DIR="results"
+K8S_NAMESPACE="default"
+RATE_LOW=10
+RATE_HIGH=10000
+DURATION_SHORT=5
+DURATION_LONG=2
+PROVIDED_IP="127.0.0.1"    # Replace with PROVIDED IP
+PROVIDED_PORT="5000"        # Replace with PROVIDED PORT
+```
+
 ### Make the script executable from the root of the project:
 
 ```bash
