@@ -10,6 +10,8 @@ DURATION_SHORT=5
 DURATION_LONG=2
 RATE_LOW=10
 RATE_HIGH=10000
+PROVIDED_IP="127.0.0.1"       # Replace with PROVIDED IP
+PROVIDED_PORT="5000"          # Replace with PROVIDED PORT
 
 echo "[INFO] Starting Minikube..."
 minikube start
@@ -52,7 +54,8 @@ python3 client/client.py --target "${K8S_URL}" --rate ${RATE_LOW} \
 echo "[INFO] Running high-load test (rate=${RATE_HIGH}, duration=${DURATION_LONG}s)..."
 python3 client/client.py --target "${K8S_URL}" --rate ${RATE_HIGH} \
   --output "${RESULTS_DIR}/kubernetes_response_${RATE_HIGH}" \
-  --duration ${DURATION_LONG}
+  --duration ${DURATION_LONG} \
+  --upload_url http://${PROVIDED_IP}:${PROVIDED_PORT}/
 
 echo "[INFO] All Kubernetes tests done. Results saved in ./${RESULTS_DIR}/"
 
