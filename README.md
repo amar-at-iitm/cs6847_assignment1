@@ -124,6 +124,7 @@ python client/client.py \
   --duration 5 \
   --output results/docker_response_10 \
   --mode sync
+  --upload_url http://< provided_IP >:port/
 ```
 
 #### 2. Docker benchmark @ 10,000 requests/sec
@@ -135,9 +136,11 @@ python client/client.py \
   --duration 2 \
   --output results/docker_response_10000 \
   --mode async
+  --upload_url http://< provided_IP >:port/
 ```
 
   - Adjust `--rate` and `--output` as needed for experiments.
+  - " http://< provided_IP >:port/ " use the required addressed to 
 
 
 ### Clean up
@@ -204,6 +207,7 @@ python client/client.py \
   --duration 5 \
   --output results/kubernetes_response_10 \
   --mode sync
+  --upload_url http://< provided_IP >:port/
 ```
 
 #### 2. Kubernetes benchmark @ 10,000 requests/sec
@@ -214,8 +218,10 @@ python client/client.py \
   --duration 2 \
   --output results/kubernetes_response_10000 \
   --mode async
+  --upload_url http://< provided_IP >:port/
 ```
   - Adjust `--rate` and `--output` as needed for experiments.
+  - " http://< provided_IP >:port/ " use the required addressed to 
 
 
 ### Clean up
