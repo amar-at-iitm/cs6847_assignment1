@@ -3,15 +3,17 @@ import statistics
 import time
 import requests
 
-def log_results(times, output_file, errors=0):
+def log_results(times, output_file, errors=0, rate=0):
     """
     Write response times and summary statistics to a file.
     """
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     with open(output_file, "w") as f:
-        for t in times:
-            f.write(f"{t:.6f}\n")
+        # Only log individual response times if rate is small (e.g., <= 100)
+        if rate <= 100:
+            for t in times:
+                f.write(f"{t:.6f}\n")
 
         f.write("\n=== Summary ===\n")
         if times:
@@ -29,6 +31,7 @@ def log_results(times, output_file, errors=0):
             f.write(f"Max response time: {t_max:.6f} seconds\n")
         else:
             f.write("No successful requests recorded.\n")
+
 
 def timestamp():
     """Return current timestamp string for debugging/logging."""
