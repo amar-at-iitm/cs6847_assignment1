@@ -32,7 +32,7 @@ def run_sync(target, rate, output_file, duration):
 
         time.sleep(interval)
 
-    log_results(times, output_file, errors)
+    log_results(times, output_file, errors, rate)
     print(f"[DONE] Finished at {timestamp()}")
 
 
@@ -69,7 +69,7 @@ async def run_async(target, rate, output_file, duration):
 
         await asyncio.gather(*tasks)
 
-    log_results(times, output_file, errors)
+    log_results(times, output_file, errors, rate)
     print(f"[DONE] Finished at {timestamp()}")
 
 
