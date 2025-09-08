@@ -3,6 +3,7 @@
 set -euo pipefail
 
 # Constants
+ROLL_NUMBER="MA24M002"
 APP_NAME="flask-app"
 NAMESPACE="default"
 RESULTS_DIR="results"
@@ -10,8 +11,12 @@ DURATION_SHORT=5
 DURATION_LONG=2
 RATE_LOW=10
 RATE_HIGH=10000
-PROVIDED_IP="127.0.0.1"       # Replace with PROVIDED IP
-PROVIDED_PORT="5000"          # Replace with PROVIDED PORT
+
+########################################################################
+PROVIDED_IP="XXX.X.X.X"       # Replace with PROVIDED IP
+PROVIDED_PORT="XXXX"          # Replace with PROVIDED PORT
+########################################################################
+
 
 echo "[INFO] Starting Minikube..."
 minikube start
@@ -47,15 +52,36 @@ echo "[INFO] Service is available at ${K8S_URL}"
 mkdir -p "${RESULTS_DIR}"
 
 echo "[INFO] Running low-load test (rate=${RATE_LOW}, duration=${DURATION_SHORT}s)..."
-python3 client/client.py --target "${K8S_URL}" --rate ${RATE_LOW} \
-  --output "${RESULTS_DIR}/kubernetes_response_${RATE_LOW}" \
-  --duration ${DURATION_SHORT}
+# Build command dynamically
+CMD="python3 client/client.py --target \"${K8S_URL}\" \
+  --rate ${RATE_LOW} \
+  --output \"${RESULTS_DIR}/${ROLL_NUMBER}kubernetes${RATE_LOW}.txt\" \
+  --duration ${DURATION_SHORT} \
+  --mode sync"
+
+# Only add --upload_url if PROVIDED_IP and PROVIDED_PORT are not placeholders
+if [[ "${PROVIDED_IP}" != "XXX.X.X.X" && "${PROVIDED_PORT}" != "XXXX" ]]; then
+  CMD+=" --upload_url http://${PROVIDED_IP}:${PROVIDED_PORT}/"
+fi
+
+# Execute the command
+eval $CMD
 
 echo "[INFO] Running high-load test (rate=${RATE_HIGH}, duration=${DURATION_LONG}s)..."
-python3 client/client.py --target "${K8S_URL}" --rate ${RATE_HIGH} \
-  --output "${RESULTS_DIR}/kubernetes_response_${RATE_HIGH}" \
+# Build command dynamically
+CMD="python3 client/client.py --target \"${K8S_URL}\" \
+  --rate ${RATE_HIGH} \
+  --output \"${RESULTS_DIR}/${ROLL_NUMBER}kubernetes${RATE_HIGH}.txt\" \
   --duration ${DURATION_LONG} \
-  --upload_url http://${PROVIDED_IP}:${PROVIDED_PORT}/
+  --mode sync"
+
+# Only add --upload_url if PROVIDED_IP and PROVIDED_PORT are not placeholders
+if [[ "${PROVIDED_IP}" != "XXX.X.X.X" && "${PROVIDED_PORT}" != "XXXX" ]]; then
+  CMD+=" --upload_url http://${PROVIDED_IP}:${PROVIDED_PORT}/"
+fi
+
+# Execute the command
+eval $CMD
 
 echo "[INFO] All Kubernetes tests done. Results saved in ./${RESULTS_DIR}/"
 
