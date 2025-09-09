@@ -89,8 +89,12 @@ RATE_LOW=10
 RATE_HIGH=10000
 DURATION_SHORT=5
 DURATION_LONG=2
-PROVIDED_IP="127.0.0.1"    # Replace with PROVIDED IP
-PROVIDED_PORT="5000"        # Replace with PROVIDED PORT
+
+########################################################################
+PROVIDED_IP="XXX.X.X.X"       # Replace with PROVIDED IP
+PROVIDED_PORT="XXXX"          # Replace with PROVIDED PORT
+########################################################################
+
 ```
 
 ### Make the script executable from the root of the project:
@@ -119,10 +123,12 @@ chmod +x run_k8s_test.sh
 
 Test results will be saved to the `results/` directory:
 
-* `results/docker_response_10`
-* `results/docker_response_10000`
-* `results/kubernetes_response_10`
-* `results/kubernetes_response_10000`
+```
+results/MA24M002dockerswarm10.txt
+results/MA24M002dockerswarm10000.txt
+results/MA24M002kubernetes10.txt
+results/MA24M002kubernetes10000.txt
+```
 
 These files will contain latency and throughput data from the test client.
 
