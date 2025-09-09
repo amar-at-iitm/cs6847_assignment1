@@ -9,6 +9,7 @@ A Python client benchmarks the service at **10 requests/sec** and **10,000 reque
 - Minikube (for Kubernetes)
 - Python 3.11+
 - Virtual environment (recommended)
+- If possible use Linux(Ubuntu)
 
 
 
@@ -40,10 +41,10 @@ assignment1/
 │   └── utils.py               # helper functions for clients.py
 │
 └── results/                  
-    ├── docker_response_10
-    ├── docker_response_10000
-    ├── kubernetes_response_10
-    └── kubernetes_response_10000
+    ├── MA24M002dockerswarm10.txt
+    ├── MA24M002dockerswarm10000.txt
+    ├── MA24M002kubernetes10.txt
+    └── MA24M002kubernetes10000.txt
 
 ```
 
@@ -122,7 +123,7 @@ python client/client.py \
   --target http://127.0.0.1:5000 \
   --rate 10 \
   --duration 5 \
-  --output results/docker_response_10 \
+  --output results/MA24M002dockerswarm10.txt \
   --mode sync
   --upload_url http://< provided_IP >:port/
 ```
@@ -134,13 +135,14 @@ python client/client.py \
   --target http://127.0.0.1:5000 \
   --rate 10000 \
   --duration 2 \
-  --output results/docker_response_10000 \
+  --output results/MA24M002dockerswarm10000.txt \
   --mode async
   --upload_url http://< provided_IP >:port/
 ```
 
   - Adjust `--rate` and `--output` as needed for experiments.
-  - " http://< provided_IP >:port/ " use the required addressed to 
+  - " http://< provided_IP >:port/ " use the required addressed to upload files
+     - If not available then remove `--upload_url`
 
 
 ### Clean up
@@ -159,8 +161,17 @@ docker swarm leave --force
 
 2. Set Docker env to use Minikube's Docker daemon
 
+   - For linux/mac
    ```bash
    eval $(minikube docker-env)
+   ```
+   - For Windows PowerShell
+   ```bash
+   & minikube -p minikube docker-env | Invoke-Expression
+   ```
+   - For Windows CommandPromt
+   ```bash
+   @FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env --shell cmd') DO @%i
    ```
 
 3. Build the Docker image inside minikube
@@ -205,7 +216,7 @@ python client/client.py \
   --target http://$(minikube ip):port \
   --rate 10 \
   --duration 5 \
-  --output results/kubernetes_response_10 \
+  --output results/MA24M002kubernetes10.txt \
   --mode sync
   --upload_url http://< provided_IP >:port/
 ```
@@ -216,12 +227,13 @@ python client/client.py \
   --target http://$(minikube ip):port \
   --rate 10000 \
   --duration 2 \
-  --output results/kubernetes_response_10000 \
+  --output results/MA24M002kubernetes10000.txt \
   --mode async
   --upload_url http://< provided_IP >:port/
 ```
   - Adjust `--rate` and `--output` as needed for experiments.
-  - " http://< provided_IP >:port/ " use the required addressed to 
+  - " http://< provided_IP >:port/ " use the required addressed to upload files
+     - If not available then remove `--upload_url`
 
 
 ### Clean up
@@ -234,13 +246,15 @@ minikube stop
 ## Result Files
 
 Four result files will be generated:
+```
+results/MA24M002dockerswarm10.txt
+results/MA24M002dockerswarm10000.txt
+results/MA24M002kubernetes10.txt
+results/MA24M002kubernetes10000.txt
+```
 
-* `results/docker_response_10`
-* `results/docker_response_10000`
-* `results/kubernetes_response_10`
-* `results/kubernetes_response_10000`
-
-Each file contains per-request times followed by a **summary**:
+- Both file for 10 requestios contains per-request times followed by a **summary**.
+- Both file for 10000 requestios contains only **summary**.
 
 ```
 0.002134
