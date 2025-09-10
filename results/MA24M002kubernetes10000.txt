@@ -1,0 +1,9 @@
+
+=== Summary ===
+Total requests: 20000
+Successful requests: 20000
+Failed requests: 0
+Average response time: 0.009530 seconds
+Median response time: 0.007573 seconds
+Min response time: 0.003292 seconds
+Max response time: 0.286923 seconds
